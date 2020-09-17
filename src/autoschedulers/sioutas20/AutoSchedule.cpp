@@ -1,7 +1,7 @@
+#include "Halide.h"
+#include "HalidePlugin.h"
 #include <algorithm>
 #include <regex>
-#include "HalidePlugin.h"
-#include "Halide.h"
 
 using namespace std;
 //using namespace Halide;
@@ -21,9 +21,6 @@ using std::vector;
 //#define user_assert _halide_user_assert
 //#define internal_assert _halide_user_assert
 //#define user_warning std::cerr
-
-
-
 
 namespace {
 
@@ -212,7 +209,7 @@ void check_estimates_on_outputs(const vector<Function> &outputs) {
         Bound est;
         for (const auto &arg : out.args()) {
             bool found = false;
-            for (int i = (int) estimates.size() - 1; i >= 0; --i) {
+            for (int i = (int)estimates.size() - 1; i >= 0; --i) {
                 if ((estimates[i].var == arg) && estimates[i].min.defined() &&
                     estimates[i].extent.defined()) {
                     found = true;
@@ -584,7 +581,7 @@ map<string, Box> DependenceAnalysis::regions_required(
 
                     // Substitute parameter estimates into the bounds and add them to the
                     // current scope.
-                    for (int d = 0; d < (int) dims.size() - 1; d++) {
+                    for (int d = 0; d < (int)dims.size() - 1; d++) {
                         Interval simple_bounds = get_element(curr_bounds, dims[d].var);
                         simple_bounds.min = substitute_var_estimates(simple_bounds.min);
                         simple_bounds.max = substitute_var_estimates(simple_bounds.max);
@@ -766,7 +763,7 @@ vector<map<string, Box>> DependenceAnalysis::overlap_regions(
     const vector<Dim> &dims = get_stage_dims(f, stage_num);
 
     // Get the redundant regions along each dimension of f.
-    for (int d = 0; d < (int) dims.size() - 1; d++) {
+    for (int d = 0; d < (int)dims.size() - 1; d++) {
         map<string, Box> conc_reg =
             redundant_regions(f, stage_num, dims[d].var, bounds, prods,
                               only_regions_computed, input_estimates);
@@ -1155,7 +1152,7 @@ struct Partitioner {
 
         void gpu_cost() {
             if (n_threads.defined() && cost.defined() && occupancy.defined()) {
-                total_cost = (cost.memory + cost.arith) / (n_threads) *occupancy;
+                total_cost = (cost.memory + cost.arith) / (n_threads)*occupancy;
                 total_cost = Internal::simplify(total_cost);
             }
         }
@@ -1540,7 +1537,7 @@ Partitioner::Partitioner(const map<string, Box> &_pipeline_bounds,
         int num_stages = f.second.updates().size() + 1;
         for (int s = 0; s < num_stages; s++) {
             FStage stg(f.second, s);
-            Group g(stg, { stg });
+            Group g(stg, {stg});
             groups.insert(make_pair(stg, g));
         }
     }
@@ -1580,9 +1577,9 @@ Partitioner::Partitioner(const map<string, Box> &_pipeline_bounds,
 //todo: this shouldnt be based on names
 bool Partitioner::check_for_boundary(const Group &group) {
     bool has_boundary = false;
-    const vector<string> bound_conds = { "constant_exterior", "repeat_edge",
-                                         "repeat_image", "mirror_image",
-                                         "mirror_interior" };
+    const vector<string> bound_conds = {"constant_exterior", "repeat_edge",
+                                        "repeat_image", "mirror_image",
+                                        "mirror_interior"};
     for (const auto &mem : group.members) {
         const string &mem_name = mem.func.name();
         if (group.inlined.find(mem_name) != group.inlined.end())
@@ -1590,8 +1587,8 @@ bool Partitioner::check_for_boundary(const Group &group) {
         for (const auto &bcs : bound_conds) {
             if (mem_name.find(bcs) != std::string::npos)
                 return true;
-       }
-   }
+        }
+    }
     return has_boundary;
 }
 
@@ -1613,7 +1610,7 @@ map<string, Expr> Partitioner::find_dims(const FStage &stg,
     map<string, Expr> dim_order;
     const map<string, Interval> &def_bounds = get_bounds(stg);
     const vector<Dim> &dims = get_stage_dims(stg.func, stage_num);
-    for (int d = 0; d < (int) dims.size() - 1; d++) {
+    for (int d = 0; d < (int)dims.size() - 1; d++) {
 
         const Interval &bound = get_element(def_bounds, dims[d].var);
         Expr extent = get_extent(bound);
@@ -1652,8 +1649,8 @@ Partitioner::optimize_granularity(const Group &pre_g,
                     continue;
                 bool new_clevel = true;
                 if (st.compute_level.defined()) {
-                    cout << "Stage " << st.func.name() << " compute at "
-                         << cons.func.name() << " , " << overlap_n.first << endl;
+                    debug(3) << "Stage " << st.func.name() << " compute at "
+                         << cons.func.name() << " , " << overlap_n.first << '\n';
 
                     const auto &stage_pos = sched.get_func_index(cons.func.name());
                     string old_clevel = get_expr_str(st.compute_stage);
@@ -1664,8 +1661,8 @@ Partitioner::optimize_granularity(const Group &pre_g,
                 if (new_clevel) {
                     st.compute_stage = cons.func.name();
                     st.compute_level = overlap_n.first;
-                    cout << "Stage " << st.func.name() << " compute at "
-                         << cons.func.name() << " , " << overlap_n.first << endl;
+                    debug(3) << "Stage " << st.func.name() << " compute at "
+                         << cons.func.name() << " , " << overlap_n.first << '\n';
                 }
             }
         }
@@ -1684,7 +1681,7 @@ Partitioner::optimize_granularity(const Group &pre_g,
         vector<string> consumers;
         if (global_children.find(st) != global_children.end()) {
             for (const FStage &c : get_element(global_children, st)) {
-                cout << "cons " << c.func.name() << " prod " << st.func.name() << endl;
+                debug(3) << "cons " << c.func.name() << " prod " << st.func.name() << '\n';
                 if (c.func.name() == st.func.name())
                     continue;
                 if (g_members.find(c.func.name()) != g_members.end() &&
@@ -1853,7 +1850,7 @@ Partitioner::evaluate_reuse(const FStage &stg, const set<string> &prods) {
     map<string, Expr> tile_sizes;
 
     const vector<Dim> &dims = get_stage_dims(stg.func, stg.stage_num);
-    for (int d = 0; d < (int) dims.size() - 1; d++) {
+    for (int d = 0; d < (int)dims.size() - 1; d++) {
         tile_sizes[dims[d].var] = 2;
     }
 
@@ -1861,7 +1858,7 @@ Partitioner::evaluate_reuse(const FStage &stg, const set<string> &prods) {
     vector<map<string, Box>> reuse_regions = dep_analysis.overlap_regions(
         stg.func, stg.stage_num, bounds, prods, false, &costs.input_estimates);
 
-    for (int d = 0; d < (int) dims.size() - 1; d++) {
+    for (int d = 0; d < (int)dims.size() - 1; d++) {
         Expr total_reuse = make_zero(Int(32));
         for (const auto &reg : reuse_regions[d]) {
             Expr size = box_size(reg.second);
@@ -2012,14 +2009,14 @@ vector<map<string, Expr>> Partitioner::generate_tile_configs(const FStage &stg,
     // find which vars we want to  tile
     vector<string> tile_vars;
 
-    for (int d = 0; d < (int) dims.size() - 1; d++) {
+    for (int d = 0; d < (int)dims.size() - 1; d++) {
         if (!dims[d].is_rvar()) {
             tile_vars.push_back(dims[d].var);
         }
     }
     set<string> thread_vars = dims_to_tile(stg);
 
-    vector<int> size_variants = { 2, 4, 8, 16, 32, 64, 128, 256 };
+    vector<int> size_variants = {2, 4, 8, 16, 32, 64, 128, 256};
 
     vector<map<string, Expr>> tile_configs;
 
@@ -2172,7 +2169,7 @@ set<string> Partitioner::dims_to_tile(const FStage &stg) {
 
     vector<string> tile_vars_init;
     vector<string> tile_vars_intr;
-    for (int d = 0; d < (int) dims.size() - 1; d++) {
+    for (int d = 0; d < (int)dims.size() - 1; d++) {
         if (!dims[d].is_rvar()) {
 
             tile_vars_init.push_back(dims[d].var);
@@ -2324,7 +2321,7 @@ vector<Expr> Partitioner::estimate_occupancy(Expr threads, Expr shared_mem,
     debug(3) << " occupancy " << simplify(occupancy) << '\n'
              << '\n'
              << '\n';
-    return { occupancy, active_threads, active_SMs, num_regs };
+    return {occupancy, active_threads, active_SMs, num_regs};
 }
 
 pair<map<string, Expr>, Partitioner::GroupAnalysis>
@@ -2335,7 +2332,7 @@ Partitioner::find_best_tile_config(const Group &g, bool is_init,
 
     map<string, Expr> out_extents = find_dims(g.output, g.output.stage_num);
     bool all_rvars = true;
-    for (int i = 0; i < (int) dims.size() - 1; i++) {
+    for (int i = 0; i < (int)dims.size() - 1; i++) {
         if (!dims[i].is_rvar())
             all_rvars = false;
     }
@@ -2582,7 +2579,7 @@ Partitioner::get_bounds_from_tile_sizes(const FStage &s,
     const map<string, Interval> &def_bounds = get_bounds(s);
     const vector<Dim> &dims = get_stage_dims(s.func, s.stage_num);
 
-    for (int d = 0; d < (int) dims.size() - 1; d++) {
+    for (int d = 0; d < (int)dims.size() - 1; d++) {
         string var = dims[d].var;
         const Interval &bound = get_element(def_bounds, var);
         const auto &iter = tile_sizes.find(var);
@@ -2679,7 +2676,7 @@ Partitioner::eval_max_threads(const Group &g, bool show_analysis) {
     DimBounds tile_bounds = get_bounds_from_tile_sizes(g.output, g.tile_sizes);
     map<string, Expr> stg_estimates_out = bounds_to_estimates(tile_bounds);
     int thread_dim = 0;
-   for (const auto &bs : stg_estimates_out) {
+    for (const auto &bs : stg_estimates_out) {
 
         const Interval &bound = get_element(def_bounds, bs.first);
         Expr extent = get_extent(bound);
@@ -2702,10 +2699,10 @@ Partitioner::eval_max_threads(const Group &g, bool show_analysis) {
         }
         if (thread_dim > 3) break;
     }
-   threads.push_back(make_pair(g.output, spawned_threads));
-   map<FStage, DimBounds> local_bounds = group_solo_bounds(g);
+    threads.push_back(make_pair(g.output, spawned_threads));
+    map<FStage, DimBounds> local_bounds = group_solo_bounds(g);
     for (const auto &stg : local_bounds) {
-       auto is_inlined = g.inlined.find(stg.first.func.name());
+        auto is_inlined = g.inlined.find(stg.first.func.name());
         if (gmembers.find(stg.first.func.name()) == gmembers.end())
             continue;
         if (is_inlined == g.inlined.end()) {
@@ -2792,7 +2789,7 @@ Partitioner::analyze_group(const Group &g, bool show_analysis, bool to_inline) {
         const vector<Dim> &dims = def.schedule().dims();
         // find first pure var
         int col_it = 0;
-        for (int d = 0; d < (int) dims.size() - 1; d++) {
+        for (int d = 0; d < (int)dims.size() - 1; d++) {
             if (!dims[d].is_rvar()) {
                 col_it = d;
                 break;
@@ -2800,7 +2797,7 @@ Partitioner::analyze_group(const Group &g, bool show_analysis, bool to_inline) {
         }
         DimBounds stg_bounds = get_bounds(g.output);
 
-        for (int d = 0; d < (int) dims.size() - 1; d++) {
+        for (int d = 0; d < (int)dims.size() - 1; d++) {
             const string &var = dims[d].var;
 
             const auto &iter = g.tile_sizes.find(var);
@@ -2868,7 +2865,7 @@ Partitioner::analyze_group(const Group &g, bool show_analysis, bool to_inline) {
         const vector<Dim> &dimsf = def.schedule().dims();
         // find first pure var
         string col_dim;
-        for (int d = 0; d < (int) dimsf.size() - 1; d++) {
+        for (int d = 0; d < (int)dimsf.size() - 1; d++) {
             if (!dimsf[d].is_rvar()) {
                 col_dim = dimsf[d].var;
                 break;
@@ -2929,12 +2926,15 @@ Partitioner::analyze_group(const Group &g, bool show_analysis, bool to_inline) {
     float load_slope;
 
     std::string param_merge = Internal::get_env_variable("HL_GPU_L2_COST");
-    std::string param_shared = Internal::get_env_variable("HL_GPU_SHARED_COST");    float cost_factor_merge;	
-    if (param_merge.empty())	cost_factor_merge = 200.0f;
-    else cost_factor_merge = std::atof(param_merge.c_str());
+    std::string param_shared = Internal::get_env_variable("HL_GPU_SHARED_COST");
+    float cost_factor_merge;
+    if (param_merge.empty()) cost_factor_merge = 200.0f;
+    else
+        cost_factor_merge = std::atof(param_merge.c_str());
     float cost_factor_shared;
-    if (param_shared.empty())	cost_factor_shared = 1.0f;
-    else  cost_factor_shared	    = std::atof(param_shared.c_str());
+    if (param_shared.empty()) cost_factor_shared = 1.0f;
+    else
+        cost_factor_shared = std::atof(param_shared.c_str());
     for (const auto &f_load : group_load_costs) {
         // get type bytes
         Expr bytes_per_ele = make_zero(Int(32));
@@ -3215,7 +3215,7 @@ Partitioner::evaluate_choice(Group &group, Partitioner::Level level) {
         const Function &cons_f = group.output.func;
         const vector<Dim> &dims = get_stage_dims(cons_f, group.output.stage_num);
 
-        for (int d = 0; d < (int) dims.size() - 1; d++) {
+        for (int d = 0; d < (int)dims.size() - 1; d++) {
 
             tile_sizes[dims[d].var] = 1;
         }
@@ -3226,10 +3226,10 @@ Partitioner::evaluate_choice(Group &group, Partitioner::Level level) {
 
     } else {
         //check if the group is valid (skip boundary conditions)
-               bool has_boundary_stages = check_for_boundary(group);
-             if (has_boundary_stages) {
-               return GroupConfig(best_tile_config, group_analysis);
-           }
+        bool has_boundary_stages = check_for_boundary(group);
+        if (has_boundary_stages) {
+            return GroupConfig(best_tile_config, group_analysis);
+        }
         pair<map<string, Expr>, GroupAnalysis> config =
             find_best_tile_config(group, false, false);
         best_tile_config = config.first;
@@ -3618,7 +3618,7 @@ Partitioner::split_dim(const Group &g, Stage f_handle, int stage_num,
         internal_assert(false);
     }
     sched.push_schedule(f_handle.name(), stage_num, oss.str(),
-                        { arg_name, outer_name, inner_name });
+                        {arg_name, outer_name, inner_name});
 
     const Expr &est = get_element(estimates, arg_name);
     internal_assert(est.defined());
@@ -3645,7 +3645,7 @@ void Partitioner::vectorize_stage(const Group &g, Stage f_handle, int stage_num,
     vector<int> vec_dim_indices;
     bool flag_lane = false;
     int n_threads = 0;
-    for (int d = 0; d < (int) dims.size() - 1; d++) {
+    for (int d = 0; d < (int)dims.size() - 1; d++) {
         string dim_name = get_base_name(dims[d].var);
         bool can_vectorize = true;
         if (rvars.find(dim_name) != rvars.end()) {
@@ -3676,7 +3676,7 @@ void Partitioner::vectorize_stage(const Group &g, Stage f_handle, int stage_num,
             }
         }
     }
-    for (int d = 0; d < (int) vec_dim_indices.size(); d++) {
+    for (int d = 0; d < (int)vec_dim_indices.size(); d++) {
         if (vec_dim_indices[d] >= 0) {
             string vec_dim_name = get_base_name(dims[vec_dim_indices[d]].var);
             bool is_rvar = (rvars.find(vec_dim_name) != rvars.end());
@@ -3689,12 +3689,12 @@ void Partitioner::vectorize_stage(const Group &g, Stage f_handle, int stage_num,
                 if ((is_group_output) && (vec_dim_indices.size() >= 3)) {
                     sched.push_schedule(f_handle.name(), stage_num,
                                         "gpu_threads(" + vec_var.name() + ")",
-                                        { vec_var.name() });
+                                        {vec_var.name()});
                     f_handle.gpu_threads(vec_var);
                 } else {
                     sched.push_schedule(f_handle.name(), stage_num,
                                         "gpu_threads(" + vec_var.name() + ")",
-                                        { vec_var.name() });
+                                        {vec_var.name()});
 
                     f_handle.gpu_threads(vec_var);
                 }
@@ -3702,7 +3702,7 @@ void Partitioner::vectorize_stage(const Group &g, Stage f_handle, int stage_num,
                 f_handle.gpu_threads(vec_var);
                 sched.push_schedule(f_handle.name(), stage_num,
                                     "gpu_threads(" + vec_var.name() + ")",
-                                    { vec_var.name() });
+                                    {vec_var.name()});
             }
             if (vec_dim_index > 0) {
                 user_warning << "Outer dim vectorization of var \"" << vec_dim_name
@@ -3721,13 +3721,13 @@ void Partitioner::unroll_group_inner_stage(
     int vec_dim_index = -1;
     vector<int> vec_dim_indices;
     bool flag_vec = true;
-    for (int d = 0; d < (int) dims.size() - 1; d++) {
+    for (int d = 0; d < (int)dims.size() - 1; d++) {
         if (dims[d].for_type == ForType::Vectorized) {
             flag_vec = false;
             break;
         }
     }
-    for (int d = 0; d < (int) dims.size() - 1; d++) {
+    for (int d = 0; d < (int)dims.size() - 1; d++) {
         if (!flag_vec)
             break;
         if (dims[d].for_type == ForType::GPUThread) {
@@ -3757,7 +3757,7 @@ void Partitioner::unroll_group_inner_stage(
             }
         }
     }
-    for (int d = 0; d < (int) vec_dim_indices.size(); d++) {
+    for (int d = 0; d < (int)vec_dim_indices.size(); d++) {
         if (vec_dim_indices[d] >= 0) {
             string vec_dim_name = get_base_name(dims[vec_dim_indices[d]].var);
             bool is_rvar = (rvars.find(vec_dim_name) != rvars.end());
@@ -3766,7 +3766,7 @@ void Partitioner::unroll_group_inner_stage(
             VarOrRVar vec_var(vec_dim_name, is_rvar);
 
             sched.push_schedule(f_handle.name(), stage_num,
-                                "unroll(" + vec_var.name() + ")", { vec_var.name() });
+                                "unroll(" + vec_var.name() + ")", {vec_var.name()});
             f_handle.unroll(vec_var);
 
             if (vec_dim_index > 0) {
@@ -3808,12 +3808,12 @@ void Partitioner::reorder_dims(Stage f_handle, int stage_num, Definition def,
     internal_assert(dims.size() > 1);
     vector<pair<string, int>> order;
     // for(const auto &sb:sbounds) cout<<sb.first<<" "<<sb.second<<endl;
-    for (int d = 0; d < (int) dims.size() - 1; d++) {
+    for (int d = 0; d < (int)dims.size() - 1; d++) {
         internal_assert(strides.find(dims[d].var) != strides.end());
     }
     // put the small extent rdoms first
 
-    for (int d = 0; d < (int) dims.size() - 1; d++) {
+    for (int d = 0; d < (int)dims.size() - 1; d++) {
         string var_name = get_base_name(dims[d].var);
 
         const auto &iter = sbounds.find(var_name);
@@ -3828,7 +3828,7 @@ void Partitioner::reorder_dims(Stage f_handle, int stage_num, Definition def,
             }
         }
     }
-    for (int d = 0; d < (int) dims.size() - 1; d++) {
+    for (int d = 0; d < (int)dims.size() - 1; d++) {
         string var_name = get_base_name(dims[d].var);
 
         const auto &iter = sbounds.find(var_name);
@@ -3855,7 +3855,7 @@ void Partitioner::reorder_dims(Stage f_handle, int stage_num, Definition def,
         Expr min_pure_stride = Int(64).max();
         string min_pure_var;
         int min_pure_index = -1;
-        for (int d = 0; d < (int) dims.size() - 1; d++) {
+        for (int d = 0; d < (int)dims.size() - 1; d++) {
             string var_name = get_base_name(dims[d].var);
             const auto &iter = strides.find(var_name);
             if ((iter != strides.end()) && dims[d].is_pure()) {
@@ -3881,7 +3881,7 @@ void Partitioner::reorder_dims(Stage f_handle, int stage_num, Definition def,
         Expr min_impure_stride = Int(64).max();
         string min_impure_var;
         int min_impure_index = -1;
-        for (int d = 0; d < (int) dims.size() - 1; d++) {
+        for (int d = 0; d < (int)dims.size() - 1; d++) {
             string var_name = get_base_name(dims[d].var);
             const auto &iter = strides.find(var_name);
             if ((iter != strides.end()) && !dims[d].is_pure()) {
@@ -3933,7 +3933,7 @@ void Partitioner::reorder_dims(Stage f_handle, int stage_num, Definition def,
     }
 
     internal_assert(!ordering.empty());
-    set<string> var_list = { ordering[0].name() };
+    set<string> var_list = {ordering[0].name()};
     string var_order = ordering[0].name();
     for (size_t o = 1; o < ordering.size(); o++) {
         var_order += ", " + ordering[o].name();
@@ -3972,7 +3972,11 @@ void Partitioner::generate_group_cpu_schedule(
     AutoSchedule &sched, bool will_fold) {
     std::string folded_fusion =
         Internal::get_env_variable("HL_AUTO_FOLDED_FUSION");
-    bool use_folded_fusion_analysis = std::atoi(folded_fusion.c_str());
+
+    bool use_folded_fusion_analysis;
+    if (folded_fusion.empty()) use_folded_fusion_analysis = true;
+    else
+        use_folded_fusion_analysis = std::atoi(folded_fusion.c_str());
     Group g = og_group;
     if ((use_folded_fusion_analysis) && (will_fold))
         g = optimize_granularity(og_group, sched);
@@ -4025,7 +4029,7 @@ void Partitioner::generate_group_cpu_schedule(
 
     // Keep track of the rvars
     set<string> rvars;
-    for (int d = 0; d < (int) dims.size() - 1; d++) {
+    for (int d = 0; d < (int)dims.size() - 1; d++) {
         if (dims[d].is_rvar()) {
             rvars.insert(get_base_name(dims[d].var));
         }
@@ -4033,7 +4037,7 @@ void Partitioner::generate_group_cpu_schedule(
 
     set<string> thread_ests = dims_to_tile(g.output);
     vector<string> dim_vars(dims.size() - 1);
-    for (int d = 0; d < (int) dims.size() - 1; d++) {
+    for (int d = 0; d < (int)dims.size() - 1; d++) {
         dim_vars[d] = get_base_name(dims[d].var);
     }
     for (const auto &var : dim_vars) {
@@ -4151,13 +4155,13 @@ void Partitioner::generate_group_cpu_schedule(
                     f_handle.reorder(seq, v);
                     sched.push_schedule(f_handle.name(), g.output.stage_num,
                                         "reorder(" + seq_var + ", " + var + ")",
-                                        { seq_var, var });
+                                        {seq_var, var});
                 }
                 if (n_blocks < 3) {
                     f_handle.gpu_blocks(v);
                     n_blocks++;
                     sched.push_schedule(f_handle.name(), g.output.stage_num,
-                                        "gpu_blocks(" + var + ")", { var });
+                                        "gpu_blocks(" + var + ")", {var});
                 }
                 def_par = simplify(def_par * iter->second);
             } else {
@@ -4208,7 +4212,7 @@ void Partitioner::generate_group_cpu_schedule(
 
         set<string> mem_rvars;
         vector<Dim> &mem_dims = mem_def.schedule().dims();
-        for (int d = 0; d < (int) mem_dims.size() - 1; d++) {
+        for (int d = 0; d < (int)mem_dims.size() - 1; d++) {
             if (mem_dims[d].is_rvar()) {
                 mem_rvars.insert(get_base_name(mem_dims[d].var));
             }
@@ -4246,17 +4250,17 @@ void Partitioner::generate_group_cpu_schedule(
                         continue;
                     // now find the var/rvar
                     const vector<Dim> &dims = get_stage_dims(memb.func, memb.stage_num);
-                    for (int i = 0; i < (int) dims.size(); i++) {
+                    for (int i = 0; i < (int)dims.size(); i++) {
 
                         if (dims[i].var == clevel) {
                             found = true;
-                            if (i + 1 < (int) dims.size() - 1) {
+                            if (i + 1 < (int)dims.size() - 1) {
                                 tile_inner_var =
                                     VarOrRVar(dims[i + 1].var, dims[i + 1].is_rvar());
                                 clevel = get_base_name(dims[i + 1].var);
 
                                 break;
-                            } else if ((i + 1) == ((int) dims.size() - 1)) {
+                            } else if ((i + 1) == ((int)dims.size() - 1)) {
                                 tile_inner_var = VarOrRVar(dims[i].var, dims[i].is_rvar());
                                 clevel = get_base_name(dims[i].var);
 
@@ -4291,7 +4295,7 @@ void Partitioner::generate_group_cpu_schedule(
                 sched.push_schedule(mem_handle.name(), mem.stage_num,
                                     "compute_at(" + sanitized_g_out + ", " + clevel +
                                         ")",
-                                    { sanitized_g_out, clevel });
+                                    {sanitized_g_out, clevel});
 
             } else {
                 user_warning << "Degenerate tiling. No dimensions are tiled" << '\n';
@@ -4439,7 +4443,7 @@ Partitioner::analyze_spatial_locality(const FStage &stg,
     map<string, Expr> var_strides;
     const vector<Dim> &dims = def.schedule().dims();
 
-    for (int d = 0; d < (int) dims.size() - 1; d++) {
+    for (int d = 0; d < (int)dims.size() - 1; d++) {
         // Get all the variables involving the dimension in the definition.
         FindVarsUsingVar dep_vars(dims[d].var);
         def.accept(&dep_vars);
@@ -4543,7 +4547,7 @@ void validate_no_partial_schedules(const Function &f) {
 
             internal_assert(dims.size() - rvars.size() - 1 <= args.size());
             int last_index = -1;
-            for (int i = rvars.size(); i < (int) dims.size() - 1; ++i) {
+            for (int i = rvars.size(); i < (int)dims.size() - 1; ++i) {
                 const Dim &d = dims[i];
                 user_assert(!d.is_rvar())
                     << "AutoSchedule: cannot auto-schedule function \"" << f.name()
@@ -4741,14 +4745,14 @@ bool inline_unbounded(const vector<Function> &outputs,
     bool inlined = false;
     // The very last few functions in 'order' are the last to be realized in the
     // pipeline (the final producers) so there is no point in checking it.
-    for (int i = 0; i < (int) order.size() - (int) outputs.size(); ++i) {
+    for (int i = 0; i < (int)order.size() - (int)outputs.size(); ++i) {
         Function f1 = env.at(order[i]);
         if (!unbounded.count(f1.name())) {
             continue;
         }
         inlined = true;
         debug(4) << "Function \"" << order[i] << "\" is unbounded\n";
-        for (int j = i + 1; j < (int) order.size(); ++j) {
+        for (int j = i + 1; j < (int)order.size(); ++j) {
             internal_assert(order[i] != order[j]);
             Function f2 = env.at(order[j]);
             debug(5) << "Inline unbounded function \"" << f1.name() << "\" inside \""
@@ -4994,8 +4998,6 @@ string generate_schedules(const vector<Function> &outputs, const Target &target,
     return sched_string;
 }
 
-
-
 /*
 MachineParams MachineParams::generic() {
     std::string params = Internal::get_env_variable("HL_MACHINE_PARAMS");
@@ -5038,31 +5040,29 @@ struct RegisterAutoscheduler {
     }
 } register_auto_scheduler;*/
 
+struct Sioutas20 {
+    void operator()(const Pipeline &pipeline, const Target &target, const MachineParams &arch_params, AutoSchedulerResults *outputs) {
+        AutoSchedulerResults results;
+        results.target = target;
+        results.machine_params_string = arch_params.to_string();
 
-struct Sioutas20 { 
-    void operator()(const Pipeline &pipeline, const Target &target, const MachineParams &arch_params, AutoSchedulerResults *outputs) { 
-        AutoSchedulerResults results; 
-        results.target = target; 
-        results.machine_params_string = arch_params.to_string(); 
- 
-/*        user_assert(target.arch == Target::X86 || target.arch == Target::ARM || 
+        /*        user_assert(target.arch == Target::X86 || target.arch == Target::ARM || 
                     target.arch == Target::POWERPC || target.arch == Target::MIPS) 
             << "The Sioutas20 autoscheduler is not supported for the target: " << target.to_string(); */
-        results.scheduler_name = "Sioutas20"; 
-        std::vector<Function> pipeline_outputs; 
-        for (Func f : pipeline.outputs()) { 
-            pipeline_outputs.push_back(f.function()); 
-        } 
-        results.schedule_source = generate_schedules(pipeline_outputs, target, arch_params); 
-        // this autoscheduler has no featurization 
- 
-        *outputs = results; 
-    } 
-}; 
- 
-REGISTER_AUTOSCHEDULER(Sioutas20) 
- 
-	} //namespace Internal
+        results.scheduler_name = "Sioutas20";
+        std::vector<Function> pipeline_outputs;
+        for (Func f : pipeline.outputs()) {
+            pipeline_outputs.push_back(f.function());
+        }
+        results.schedule_source = generate_schedules(pipeline_outputs, target, arch_params);
+        // this autoscheduler has no featurization
 
-} //namespace Halide
+        *outputs = results;
+    }
+};
 
+REGISTER_AUTOSCHEDULER(Sioutas20)
+
+}  //namespace Internal
+
+}  //namespace Halide
