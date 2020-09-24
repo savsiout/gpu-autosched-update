@@ -2260,14 +2260,7 @@ vector<Expr> Partitioner::estimate_occupancy(const Expr &threads, const Expr &sh
     // default HL_CUDA_JIT_MAX_REGS is 64, use that as upper limit for occupancy calculations
     else if (can_prove(num_regs > 64))
         num_regs = make_const(Int(32), 64);
-    //but since we might be setting it to max_regs_per_thread to avoid spilling, make sure that threadblock is not too large
-    std::string sregs = Internal::get_env_variable("HL_CUDA_JIT_MAX_REGISTERS");
-    Expr cu_max_regs;
-    if (sregs.empty()) {
-        cu_max_regs = make_const(Int(32), 64);
-    } else
-        cu_max_regs = Expr(std::atoi(sregs.c_str()));
-
+ 
     debug(3) << "Estimated regs..." << num_regs << '\n';
     // get the number of warps per block
     Expr warps_per_block =
